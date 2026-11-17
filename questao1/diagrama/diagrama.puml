@@ -1,0 +1,169 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+interface FabricaNuvem <<Abstract Factory>> {
+    +getNomeProvedor(): String
+    +getCustoHoraMaquina(): double
+    +getCustoGbArmazenamento(): double
+    +getCustoMensalFila(): double
+    +criarMaquinaVirtual(numero: int): MaquinaVirtual
+    +criarArmazenamento(numero: int): Armazenamento
+    +criarFila(numero: int): FilaMensagens
+}
+
+class FabricaAws <<Concrete Factory>>
+class FabricaAzure <<Concrete Factory>>
+
+interface MaquinaVirtual <<Abstract Product>> {
+    +getId(): String
+}
+interface Armazenamento <<Abstract Product>> {
+    +getId(): String
+}
+interface FilaMensagens <<Abstract Product>> {
+    +getId(): String
+}
+
+class MaquinaVirtualAws <<Concrete Product>> {
+    +{static} CUSTO_POR_HORA: double
+    -id: String
+}
+class ArmazenamentoAws <<Concrete Product>> {
+    +{static} CUSTO_POR_GB: double
+    -id: String
+}
+class FilaAws <<Concrete Product>> {
+    +{static} CUSTO_MENSAL: double
+    -id: String
+}
+class MaquinaVirtualAzure <<Concrete Product>> {
+    +{static} CUSTO_POR_HORA: double
+    -id: String
+}
+class ArmazenamentoAzure <<Concrete Product>> {
+    +{static} CUSTO_POR_GB: double
+    -id: String
+}
+class FilaAzure <<Concrete Product>> {
+    +{static} CUSTO_MENSAL: double
+    -id: String
+}
+
+class MontadorAmbiente <<Client>> {
+    -{static} HORAS_NO_MES: int
+    +provisionar(solicitacao: SolicitacaoAmbiente): boolean
+    -estimarCusto(fabrica: FabricaNuvem, solicitacao: SolicitacaoAmbiente): double
+}
+
+class SolicitacaoAmbiente {
+    -nome: String
+    -quantidadeMaquinas: int
+    -gbArmazenamento: int
+    +getNome(): String
+    +getProvedor(): FabricaNuvem
+    +getQuantidadeMaquinas(): int
+    +getGbArmazenamento(): int
+}
+
+class Ambiente {
+    -nome: String
+    -provedor: String
+    -regiao: String
+    -custoMensal: double
+    +getResumo(): String
+}
+
+class Configuracao <<Singleton>> {
+    -{static} instancia: Configuracao
+    -regiaoPadrao: String
+    -orcamentoMensalMaximo: double
+    -Configuracao()
+    +{static} getInstance(): Configuracao
+    +getRegiaoPadrao(): String
+    +getOrcamentoMensalMaximo(): double
+}
+
+class HistoricoAuditoria <<Singleton>> {
+    -{static} INSTANCIA: HistoricoAuditoria
+    -registros: List<RegistroAuditoria>
+    -HistoricoAuditoria()
+    +{static} getInstance(): HistoricoAuditoria
+    +registrar(ambiente: String, provedor: String, resultado: String): void
+    +getRegistros(): List<RegistroAuditoria>
+}
+
+class RegistroAuditoria {
+    -dataHora: LocalDateTime
+    -ambiente: String
+    -provedor: String
+    -resultado: String
+    +toString(): String
+}
+
+class ProvisionamentoThread <<Thread>> {
+    +run(): void
+}
+
+class Main
+
+FabricaNuvem <|.. FabricaAws
+FabricaNuvem <|.. FabricaAzure
+
+MaquinaVirtual <|.. MaquinaVirtualAws
+MaquinaVirtual <|.. MaquinaVirtualAzure
+Armazenamento <|.. ArmazenamentoAws
+Armazenamento <|.. ArmazenamentoAzure
+FilaMensagens <|.. FilaAws
+FilaMensagens <|.. FilaAzure
+
+FabricaAws ..> MaquinaVirtualAws : cria
+FabricaAws ..> ArmazenamentoAws : cria
+FabricaAws ..> FilaAws : cria
+FabricaAzure ..> MaquinaVirtualAzure : cria
+FabricaAzure ..> ArmazenamentoAzure : cria
+FabricaAzure ..> FilaAzure : cria
+
+FabricaNuvem ..> MaquinaVirtual
+FabricaNuvem ..> Armazenamento
+FabricaNuvem ..> FilaMensagens
+
+SolicitacaoAmbiente --> FabricaNuvem : provedor
+
+MontadorAmbiente ..> SolicitacaoAmbiente
+MontadorAmbiente ..> FabricaNuvem
+MontadorAmbiente ..> Ambiente : cria
+MontadorAmbiente ..> Configuracao : usa
+MontadorAmbiente ..> HistoricoAuditoria : usa
+
+Ambiente o-- "1..*" MaquinaVirtual
+Ambiente o-- "1" Armazenamento
+Ambiente o-- "1" FilaMensagens
+
+HistoricoAuditoria o-- "0..*" RegistroAuditoria
+
+ProvisionamentoThread --> MontadorAmbiente
+ProvisionamentoThread --> SolicitacaoAmbiente
+
+Main ..> FabricaAws : escolhe o provedor
+Main ..> FabricaAzure : escolhe o provedor
+Main ..> SolicitacaoAmbiente
+Main ..> ProvisionamentoThread
+Main ..> HistoricoAuditoria
+
+note right of FabricaNuvem
+  Abstract Factory: um unico objeto cria
+  os tres recursos do mesmo provedor
+  (RNF01 a RNF03).
+end note
+
+note bottom of Configuracao
+  Singleton: le o config.properties uma
+  unica vez, getInstance sincronizado (RNF04).
+end note
+
+note bottom of HistoricoAuditoria
+  Singleton: instancia criada na carga da
+  classe, registrar e getRegistros
+  sincronizados (RNF05).
+end note
+@enduml
