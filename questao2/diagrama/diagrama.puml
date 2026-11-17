@@ -1,0 +1,148 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class Lote <<Subject, Context>> {
+    -{static} AUMENTO_MINIMO_PERCENTUAL: int
+    -nome: String
+    -categoria: String
+    -precoInicial: double
+    -precoReserva: double
+    -aberto: boolean
+    -vendido: boolean
+    +acompanhar(interessado: Interessado): void
+    +deixarDeAcompanhar(interessado: Interessado): void
+    +darLance(autor: Interessado, valor: double): boolean
+    -notificar(lance: Lance): void
+    +encerrar(): boolean
+    +trocarRegraComissao(novaRegra: RegraComissao): void
+    +calcularComissao(): double
+    +getValorVenda(): double
+    +getLanceAtual(): double
+    +getMaiorLance(): Lance
+    +getTotalLances(): int
+}
+
+class Lance {
+    -valor: double
+    +getAutor(): Interessado
+    +getValor(): double
+}
+
+interface Interessado <<Observer>> {
+    +getNome(): String
+    +atualizar(lote: Lote, lance: Lance): void
+}
+
+class Participante <<Concrete Observer>> {
+    -nome: String
+    +atualizar(lote: Lote, lance: Lance): void
+}
+class PainelLeiloeiro <<Concrete Observer>> {
+    +atualizar(lote: Lote, lance: Lance): void
+}
+class Auditor <<Concrete Observer>> {
+    -registros: List<String>
+    +atualizar(lote: Lote, lance: Lance): void
+    +imprimirRegistros(): void
+}
+
+interface RegraComissao <<Strategy>> {
+    +getNome(): String
+    +calcular(valorVenda: double): double
+}
+class ComissaoArte <<Concrete Strategy>>
+class ComissaoVeiculos <<Concrete Strategy>>
+class ComissaoImoveis <<Concrete Strategy>>
+class ComissaoEletronicos <<Concrete Strategy>>
+
+interface Fatura <<Component>> {
+    +getDescricao(): String
+    +getValorVenda(): double
+    +getTotal(): double
+}
+class FaturaLote <<Concrete Component>> {
+    +getDescricao(): String
+    +getValorVenda(): double
+    +getTotal(): double
+}
+abstract class ServicoAdicional <<Decorator>> {
+    #{abstract} getNomeServico(): String
+    #{abstract} getCustoServico(): double
+    +getDescricao(): String
+    +getValorVenda(): double
+    +getTotal(): double
+}
+class SeguroTransporte <<Concrete Decorator>>
+class CertificadoAutenticidade <<Concrete Decorator>>
+class EmbalagemEspecial <<Concrete Decorator>>
+class EntregaExpressa <<Concrete Decorator>>
+
+class ImpressoraFatura {
+    +imprimir(fatura: Fatura): void
+}
+class AcertoVendedor {
+    +imprimir(lote: Lote): void
+}
+class Main
+
+Interessado <|.. Participante
+Interessado <|.. PainelLeiloeiro
+Interessado <|.. Auditor
+
+RegraComissao <|.. ComissaoArte
+RegraComissao <|.. ComissaoVeiculos
+RegraComissao <|.. ComissaoImoveis
+RegraComissao <|.. ComissaoEletronicos
+
+Fatura <|.. FaturaLote
+Fatura <|.. ServicoAdicional
+ServicoAdicional <|-- SeguroTransporte
+ServicoAdicional <|-- CertificadoAutenticidade
+ServicoAdicional <|-- EmbalagemEspecial
+ServicoAdicional <|-- EntregaExpressa
+
+Lote o--> "0..*" Interessado : interessados
+Lote *--> "0..*" Lance : lances
+Lote --> "1" RegraComissao : regraComissao
+Lance --> "1" Interessado : autor
+ServicoAdicional o--> "1" Fatura : fatura envolvida
+FaturaLote --> "1" Lote
+
+Interessado ..> Lote
+Interessado ..> Lance
+
+ImpressoraFatura ..> Fatura
+AcertoVendedor ..> Lote
+
+Main ..> Lote
+Main ..> Participante
+Main ..> PainelLeiloeiro
+Main ..> Auditor
+Main ..> ComissaoArte
+Main ..> ComissaoEletronicos
+Main ..> FaturaLote
+Main ..> SeguroTransporte
+Main ..> CertificadoAutenticidade
+Main ..> EmbalagemEspecial
+Main ..> EntregaExpressa
+Main ..> ImpressoraFatura
+Main ..> AcertoVendedor
+
+note right of Interessado
+  Observer (RNF01): o Lote so conhece a
+  interface Interessado. Novo tipo de
+  interessado = classe nova.
+end note
+
+note right of RegraComissao
+  Strategy (RNF02): a regra e trocada em
+  tempo de execucao, sem if ou switch
+  sobre a categoria.
+end note
+
+note bottom of ServicoAdicional
+  Decorator (RNF03 e RNF04): cada servico
+  envolve uma Fatura. A impressora trata
+  igual qualquer quantidade de servicos.
+end note
+@enduml
