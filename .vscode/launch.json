@@ -1,0 +1,33 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "request": "launch",
+            "name": "Questao 1 (java)",
+            "mainClass": "Main",
+            "cwd": "${workspaceFolder}/questao1"
+        },
+        {
+            "type": "jdk",
+            "request": "launch",
+            "name": "Questao 1 (jdk)",
+            "mainClass": "Main",
+            "cwd": "${workspaceFolder}/questao1"
+        },
+        {
+            "type": "java",
+            "request": "launch",
+            "name": "Questao 2 (java)",
+            "mainClass": "Main",
+            "cwd": "${workspaceFolder}/questao2"
+        },
+        {
+            "type": "jdk",
+            "request": "launch",
+            "name": "Questao 2 (jdk)",
+            "mainClass": "Main",
+            "cwd": "${workspaceFolder}/questao2"
+        }
+    ]
+}
